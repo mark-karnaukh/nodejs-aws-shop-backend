@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { SwaggerUi } from '@pepperize/cdk-apigateway-swagger-ui';
 import * as path from 'path';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
@@ -34,9 +35,12 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
         ],
         allowMethods: [...Cors.ALL_METHODS], // 'OPTIONS', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'
         allowCredentials: true,
-        allowOrigins: [...Cors.ALL_ORIGINS], // Cors.ALL_ORIGINS 'http://localhost:3000'
+        allowOrigins: [...Cors.ALL_ORIGINS], // 'http://localhost:3000'
       },
     });
+
+    // 👇 add SwaggerUI to your AWS Apigateway RestApi
+    new SwaggerUi(this, 'SwaggerUI', { resource: api.root });
 
     // 👇 create an Output for the API URL
     new cdk.CfnOutput(this, 'apiUrl', { value: api.url });
