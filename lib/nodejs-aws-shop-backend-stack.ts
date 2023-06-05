@@ -17,25 +17,23 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
     //   visibilityTimeout: cdk.Duration.seconds(300)
     // });
 
-    const { Cors } = apigateway;
-
     const api = new apigateway.RestApi(this, 'BackendShopAPI', {
       description: 'Aws NodeJs Backend Shop API',
       deployOptions: {
-        // stageName: 'dev', // Deployment stages: 'dev' or 'prod'. By default, the stageName is set to prod.
+        stageName: 'dev', // Deployment stages: 'dev' or 'prod'. By default, the stageName is set to prod.
       },
       // 👇 enable CORS
       defaultCorsPreflightOptions: {
         allowHeaders: [
-          ...Cors.DEFAULT_HEADERS,
+          ...apigateway.Cors.DEFAULT_HEADERS,
           'Content-Type',
           'X-Amz-Date',
           'Authorization',
           'X-Api-Key',
         ],
-        allowMethods: [...Cors.ALL_METHODS], // 'OPTIONS', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'
+        allowMethods: apigateway.Cors.ALL_METHODS, // 'OPTIONS', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'
         allowCredentials: true,
-        allowOrigins: [...Cors.ALL_ORIGINS], // 'http://localhost:3000'
+        allowOrigins: apigateway.Cors.ALL_ORIGINS, // 'http://localhost:3000'
       },
     });
 
