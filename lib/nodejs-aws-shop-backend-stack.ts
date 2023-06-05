@@ -1,5 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import * as path from 'path';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 export class NodejsAwsShopBackendStack extends cdk.Stack {
@@ -12,5 +15,74 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
     // const queue = new sqs.Queue(this, 'NodejsAwsShopBackendQueue', {
     //   visibilityTimeout: cdk.Duration.seconds(300)
     // });
+
+    const { Cors } = apigateway;
+
+    const api = new apigateway.RestApi(this, 'BackendShopAPI', {
+      description: 'Aws NodeJs Backend Shop API',
+      deployOptions: {
+        // stageName: 'dev', // Deployment stages: 'dev' or 'prod'. By default, the stageName is set to prod.
+      },
+      // 👇 enable CORS
+      defaultCorsPreflightOptions: {
+        allowHeaders: [
+          ...Cors.DEFAULT_HEADERS,
+          'Content-Type',
+          'X-Amz-Date',
+          'Authorization',
+          'X-Api-Key',
+        ],
+        allowMethods: [...Cors.ALL_METHODS], // 'OPTIONS', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'
+        allowCredentials: true,
+        allowOrigins: [...Cors.ALL_ORIGINS], // Cors.ALL_ORIGINS 'http://localhost:3000'
+      },
+    });
+
+    // 👇 create an Output for the API URL
+    new cdk.CfnOutput(this, 'apiUrl', { value: api.url });
+
+    // 👇 define GET products list function
+    const getProductsListLambda = new lambda.Function(
+      this,
+      'GetProductsListLambda',
+      {
+        runtime: lambda.Runtime.NODEJS_18_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, '../handlers/get-products-list')
+        ),
+      }
+    );
+
+    // 👇 add a /products resource
+    const products = api.root.addResource('products');
+
+    // 👇 integrate GET /products with getProductsListLambda
+    products.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(getProductsListLambda, { proxy: true })
+    );
+
+    // 👇 define get product by id function
+    const getProductByIdLambda = new lambda.Function(
+      this,
+      'GetProductByIdLambda',
+      {
+        runtime: lambda.Runtime.NODEJS_18_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, '../handlers/get-product-by-id')
+        ),
+      }
+    );
+
+    // 👇 add a /products/{productId} resource
+    const product = products.addResource('{productId}');
+
+    // 👇 integrate GET /products/{productId} with getProductByIdLambda
+    product.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(getProductByIdLambda)
+    );
   }
 }
