@@ -9,7 +9,7 @@ export async function handler(
   event: APIGatewayProxyEvent,
   context: Context
 ): Promise<APIGatewayProxyResult> {
-  console.log('request:', JSON.stringify(event, undefined, 2));
+  console.log('Incoming request:', JSON.stringify(event, undefined, 2));
 
   const productId = event.pathParameters?.productId;
   const product = productsList.find((product) => product.id === productId);
