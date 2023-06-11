@@ -24,9 +24,21 @@ jest.mock('aws-sdk', () => {
 });
 
 describe('GetProductsList lambda handler:', () => {
-  test('should return products list', async () => {
+  test('should return products list (Status Code: 200)', async () => {
     const result = await handler({} as APIGatewayProxyEvent, {} as Context);
 
+    expect(result.statusCode).toEqual(200);
     expect(JSON.parse(result.body)).toEqual(productsList);
+  });
+
+  test('should handle DB errors (Status Code: 500)', async () => {
+    mockDocumentClient.scan.promise.mockImplementationOnce(() => {
+      throw new Error('test-error');
+    });
+
+    const result = await handler({} as APIGatewayProxyEvent, {} as Context);
+
+    expect(result.statusCode).toEqual(500);
+    expect(JSON.parse(result.body)).toEqual({ message: 'test-error' });
   });
 });
