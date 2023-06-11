@@ -1,0 +1,122 @@
+{
+  "Products": [
+    {
+      "PutRequest": {
+        "Item": {
+          "id": { "S": "82f6040a-b0fe-4e29-855d-0f30e960ab96" },
+          "title": { "S": "iPhone 9" },
+          "description": { "S": "An apple mobile which is nothing like apple" },
+          "price": { "N": "549" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "id": { "S": "f64f41e1-a423-4e5d-9e99-8e7a17ac9e04" },
+          "title": { "S": "iPhone X" },
+          "description": {
+            "S": "SIM-Free, Model A19211 6.5-inch Super Retina HD display with OLED technology A12 Bionic chip with ..."
+          },
+          "price": { "N": "899" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "id": { "S": "6852273d-0ce7-4916-ad66-022b6d0eb424" },
+          "title": { "S": "Samsung Universe 9" },
+          "description": {
+            "S": "Samsung's new variant which goes beyond Galaxy to the Universe"
+          },
+          "price": { "N": "1249" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "id": { "S": "31e2192d-f2d1-4b22-94ac-0ab2017475c9" },
+          "title": { "S": "OPPOF19" },
+          "description": {
+            "S": "OPPO F19 is officially announced on April 2021."
+          },
+          "price": { "N": "280" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "id": { "S": "624de57f-98ca-46cb-815b-449978f8fb65" },
+          "title": { "S": "Huawei P30" },
+          "description": {
+            "S": "Huawei’s re-badged P30 Pro New Edition was officially unveiled yesterday in Germany and now the device has made its way to the UK."
+          },
+          "price": { "N": "499" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "id": { "S": "968e67e5-ce29-40ba-a443-32f6b3b538f7" },
+          "title": { "S": "MacBook Pro" },
+          "description": {
+            "S": "MacBook Pro 2021 with mini-LED display may launch between September, November"
+          },
+          "price": { "N": "1749" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "id": { "S": "1696d5fa-2dca-4cc9-9c3c-0d53524d2de3" },
+          "title": { "S": "Samsung Galaxy Book" },
+          "description": {
+            "S": "Samsung Galaxy Book S (2020) Laptop With Intel Lakefield Chip, 8GB of RAM Launched"
+          },
+          "price": { "N": "1499" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "id": { "S": "842ab817-c7b5-4724-9b0c-0575e8726043" },
+          "title": { "S": "Microsoft Surface Laptop 4" },
+          "description": {
+            "S": "Style and speed. Stand out on HD video calls backed by Studio Mics. Capture ideas on the vibrant touchscreen."
+          },
+          "price": { "N": "1499" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "id": { "S": "02edea76-9340-4a1f-bdbc-d39115fc5372" },
+          "title": { "S": "Infinix INBOOK" },
+          "description": {
+            "S": "Infinix Inbook X1 Ci3 10th 8GB 256GB 14 Win10 Grey – 1 Year Warranty"
+          },
+          "price": { "N": "1099" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "id": { "S": "5212ede8-b7b0-45e7-acf7-f5c27355550f" },
+          "title": { "S": "HP Pavilion 15-DK1056WM" },
+          "description": {
+            "S": "HP Pavilion 15-DK1056WM Gaming Laptop 10th Gen Core i5, 8GB, 256GB SSD, GTX 1650 4GB, Windows 10"
+          },
+          "price": { "N": "1099" }
+        }
+      }
+    }
+  ]
+}

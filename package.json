@@ -12,7 +12,10 @@
     "diff": "cdk diff",
     "bootstrap": "cdk bootstrap",
     "deploy": "cdk deploy",
-    "destroy": "cdk destroy"
+    "deploy:outputs": "cdk deploy --outputs-file ./cdk-outputs.json",
+    "destroy": "cdk destroy",
+    "redeploy": "npm run destroy && npm run build && npm run deploy:outputs",
+    "dynamodb:seed:products": "aws dynamodb batch-write-item --request-items file://mocks/products.json"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.115",
@@ -27,6 +30,7 @@
   "dependencies": {
     "@pepperize/cdk-apigateway-swagger-ui": "^0.0.651",
     "aws-cdk-lib": "2.81.0",
+    "aws-sdk": "^2.1395.0",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21"
   }
