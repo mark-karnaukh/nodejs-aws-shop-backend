@@ -135,5 +135,31 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
       'GET',
       new apigateway.LambdaIntegration(getProductByIdLambda)
     );
+
+    // 👇 define create product function
+    const createProductLambda = new lambda.Function(
+      this,
+      'CreateProductLambda',
+      {
+        runtime: lambda.Runtime.NODEJS_16_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, '../handlers/create-product')
+        ),
+        environment: {
+          DYNAMODB_PRODUCTS_TABLE_NAME: productsTable.tableName,
+          DYNAMODB_STOCKS_TABLE_NAME: stocksTable.tableName,
+        },
+      }
+    );
+
+    productsTable.grantWriteData(createProductLambda);
+    stocksTable.grantWriteData(createProductLambda);
+
+    // 👇 integrate POST /products with createProductLambda
+    products.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(createProductLambda)
+    );
   }
 }
