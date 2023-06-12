@@ -72,7 +72,7 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
           path.join(__dirname, '../handlers/get-products-list')
         ),
         environment: {
-          PRODUCTS_TABLE_NAME: productsTable.tableName,
+          DYNAMODB_PRODUCTS_TABLE_NAME: productsTable.tableName,
         },
       }
     );
@@ -99,12 +99,12 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
           path.join(__dirname, '../handlers/get-product-by-id')
         ),
         environment: {
-          PRODUCTS_TABLE_NAME: productsTable.tableName,
+          DYNAMODB_PRODUCTS_TABLE_NAME: productsTable.tableName,
         },
       }
     );
 
-    productsTable.grantReadData(getProductsListLambda);
+    productsTable.grantReadData(getProductByIdLambda);
 
     // 👇 add a /products/{productId} resource
     const product = products.addResource('{productId}');

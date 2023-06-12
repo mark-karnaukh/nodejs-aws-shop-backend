@@ -14,7 +14,7 @@ export async function handler(
   // Logs for debugging
   console.log('Incoming request:', JSON.stringify(event, undefined, 2));
 
-  const productsTableName = process.env.PRODUCTS_TABLE_NAME || '';
+  const productsTableName = process.env.DYNAMODB_PRODUCTS_TABLE_NAME || '';
 
   const headers = {
     'Content-Type': 'application/json',
