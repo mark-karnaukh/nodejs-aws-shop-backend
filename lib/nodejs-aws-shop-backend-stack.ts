@@ -156,10 +156,34 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
     productsTable.grantWriteData(createProductLambda);
     stocksTable.grantWriteData(createProductLambda);
 
+    // 👇 define the request body schema
+    const requestBodySchema = new apigateway.Model(this, 'RequestBodySchema', {
+      restApi: api,
+      contentType: 'application/json',
+      schema: {
+        type: apigateway.JsonSchemaType.OBJECT,
+        properties: {
+          title: { type: apigateway.JsonSchemaType.STRING },
+          description: { type: apigateway.JsonSchemaType.STRING },
+          price: { type: apigateway.JsonSchemaType.NUMBER },
+          count: { type: apigateway.JsonSchemaType.NUMBER },
+        },
+        required: ['title', 'description', 'price'],
+      },
+    });
+
     // 👇 integrate POST /products with createProductLambda
     products.addMethod(
       'POST',
-      new apigateway.LambdaIntegration(createProductLambda)
+      new apigateway.LambdaIntegration(createProductLambda),
+      {
+        requestModels: {
+          'application/json': requestBodySchema,
+        },
+        requestValidatorOptions: {
+          validateRequestBody: true,
+        },
+      }
     );
   }
 }
