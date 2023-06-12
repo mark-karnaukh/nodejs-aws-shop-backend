@@ -15,6 +15,7 @@ export async function handler(
   console.log('Incoming request:', JSON.stringify(event, undefined, 2));
 
   const productsTableName = process.env.DYNAMODB_PRODUCTS_TABLE_NAME || '';
+  const stocksTableName = process.env.DYNAMODB_STOCKS_TABLE_NAME || '';
 
   const headers = {
     'Content-Type': 'application/json',
@@ -24,14 +25,26 @@ export async function handler(
   };
 
   try {
-    const results = await dynamoDb
-      .scan({ TableName: productsTableName })
-      .promise();
+    const [productsScanResults, stocksScanResults] = await Promise.all([
+      dynamoDb.scan({ TableName: productsTableName }).promise(),
+      dynamoDb.scan({ TableName: stocksTableName }).promise(),
+    ]);
+
+    const results = productsScanResults.Items?.map((product) => {
+      const stockData = stocksScanResults.Items?.find(
+        (stockItem) => stockItem.product_id === product.id
+      );
+
+      return {
+        ...product,
+        count: stockData?.count || 0,
+      };
+    });
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(results.Items),
+      body: JSON.stringify(results),
     };
   } catch (error) {
     const { message } = error as AWSError;

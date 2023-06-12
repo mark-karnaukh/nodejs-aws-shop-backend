@@ -14,7 +14,7 @@
     "deploy": "cdk deploy",
     "deploy:outputs": "cdk deploy --outputs-file ./cdk-outputs.json",
     "destroy": "cdk destroy",
-    "redeploy": "npm run destroy && npm run build && npm run deploy:outputs",
+    "cloud:infra:setup": "npm run destroy && npm run build && npm run deploy:outputs && npm run dynamodb:seed",
     "dynamodb:seed:products": "aws dynamodb batch-write-item --request-items file://mocks/products.json",
     "dynamodb:seed:stocks": "aws dynamodb batch-write-item --request-items file://mocks/stocks.json",
     "dynamodb:seed": "npm run dynamodb:seed:products && npm run dynamodb:seed:stocks"

@@ -32,6 +32,7 @@ describe('GetProductById lambda handler:', () => {
       (product) => product.id === testProductId
     );
 
+    // TODO: Add tests including the 'stocks' data
     mockDocumentClient.query.promise.mockImplementationOnce(() => {
       return Promise.resolve({
         Items: productsResult,
@@ -48,7 +49,7 @@ describe('GetProductById lambda handler:', () => {
       {} as Context
     );
 
-    expect(JSON.parse(result.body)).toEqual(productsList[0]);
+    expect(JSON.parse(result.body)).toEqual({ ...productsList[0], count: 0 });
   });
 
   test('should return an error - product not found (Status Code: 404)', async () => {
@@ -57,6 +58,7 @@ describe('GetProductById lambda handler:', () => {
       (product) => product.id === testProductId
     );
 
+    // TODO: Add tests including the 'stocks' data
     mockDocumentClient.query.promise.mockImplementationOnce(() => {
       return Promise.resolve({
         Items: productsResult,

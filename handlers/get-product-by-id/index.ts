@@ -15,6 +15,8 @@ export async function handler(
   console.log('Incoming request:', JSON.stringify(event, undefined, 2));
 
   const productsTableName = process.env.DYNAMODB_PRODUCTS_TABLE_NAME || '';
+  const stocksTableName = process.env.DYNAMODB_STOCKS_TABLE_NAME || '';
+
   const productId = event.pathParameters?.productId;
 
   const headers = {
@@ -25,17 +27,28 @@ export async function handler(
   };
 
   try {
-    const queryResults = await dynamoDb
-      .query({
-        TableName: productsTableName,
-        KeyConditionExpression: 'id = :productId',
-        ExpressionAttributeValues: {
-          ':productId': productId,
-        },
-      })
-      .promise();
+    const [productsQueryResults, stocksQueryResults] = await Promise.all([
+      dynamoDb
+        .query({
+          TableName: productsTableName,
+          KeyConditionExpression: 'id = :productId',
+          ExpressionAttributeValues: {
+            ':productId': productId,
+          },
+        })
+        .promise(),
+      dynamoDb
+        .query({
+          TableName: stocksTableName,
+          KeyConditionExpression: 'product_id = :productId',
+          ExpressionAttributeValues: {
+            ':productId': productId,
+          },
+        })
+        .promise(),
+    ]);
 
-    if (!queryResults.Count) {
+    if (!productsQueryResults.Count) {
       return {
         statusCode: 404,
         headers,
@@ -45,10 +58,15 @@ export async function handler(
       };
     }
 
+    const results = {
+      ...productsQueryResults.Items?.at(0),
+      count: stocksQueryResults.Items?.at(0)?.count || 0,
+    };
+
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(queryResults.Items?.at(0)),
+      body: JSON.stringify(results),
     };
   } catch (error) {
     const { message } = error as AWSError;

@@ -7,6 +7,7 @@ let mockDocumentClient = {
   scan: {
     promise: jest
       .fn()
+      // TODO: Add tests including the 'stocks' data
       .mockImplementation(() => Promise.resolve({ Items: productsList })),
   },
 };
@@ -28,7 +29,9 @@ describe('GetProductsList lambda handler:', () => {
     const result = await handler({} as APIGatewayProxyEvent, {} as Context);
 
     expect(result.statusCode).toEqual(200);
-    expect(JSON.parse(result.body)).toEqual(productsList);
+    expect(JSON.parse(result.body)).toEqual(
+      productsList.map((product) => ({ ...product, count: 0 }))
+    );
   });
 
   test('should handle DB errors (Status Code: 500)', async () => {
