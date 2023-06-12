@@ -35,6 +35,23 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
       },
     });
 
+    // 👇 create DynamoDB 'Stocks' table
+    const stocksTable = new dynamodb.Table(this, 'Stocks', {
+      tableName: 'Stocks',
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      // readCapacity: 5,
+      // writeCapacity: 5,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      partitionKey: {
+        name: 'product_id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'count',
+        type: dynamodb.AttributeType.NUMBER,
+      },
+    });
+
     const api = new apigateway.RestApi(this, 'BackendShopAPI', {
       description: 'Aws NodeJs Backend Shop API',
       deployOptions: {
@@ -73,11 +90,13 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
         ),
         environment: {
           DYNAMODB_PRODUCTS_TABLE_NAME: productsTable.tableName,
+          DYNAMODB_STOCKS_TABLE_NAME: stocksTable.tableName,
         },
       }
     );
 
     productsTable.grantReadData(getProductsListLambda);
+    stocksTable.grantReadData(getProductsListLambda);
 
     // 👇 add a /products resource
     const products = api.root.addResource('products');
@@ -100,11 +119,13 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
         ),
         environment: {
           DYNAMODB_PRODUCTS_TABLE_NAME: productsTable.tableName,
+          DYNAMODB_STOCKS_TABLE_NAME: stocksTable.tableName,
         },
       }
     );
 
     productsTable.grantReadData(getProductByIdLambda);
+    stocksTable.grantReadData(getProductByIdLambda);
 
     // 👇 add a /products/{productId} resource
     const product = products.addResource('{productId}');
