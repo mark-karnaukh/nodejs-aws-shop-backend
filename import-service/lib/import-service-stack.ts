@@ -91,5 +91,30 @@ export class ImportServiceStack extends cdk.Stack {
         proxy: true,
       })
     );
+
+    // 👇 define import products file function
+    const importFileParserLambda = new lambda.Function(
+      this,
+      'ImportFileParserLambda',
+      {
+        runtime: lambda.Runtime.NODEJS_16_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, '../handlers/import-file-parser/')
+        ),
+        environment: {
+          S3_BUCKET_NAME: bucket.bucketName,
+          S3_BUCKET_ROOT_FOLDER: 'uploaded',
+        },
+      }
+    );
+
+    bucket.grantRead(importFileParserLambda);
+
+    // 👇 assign notifications to be sent to the Lambda function
+    bucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(importFileParserLambda)
+    );
   }
 }
