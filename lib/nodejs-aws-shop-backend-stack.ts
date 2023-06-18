@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
 import { SwaggerUi } from '@pepperize/cdk-apigateway-swagger-ui';
 import * as path from 'path';
@@ -16,6 +17,40 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
     // const queue = new sqs.Queue(this, 'NodejsAwsShopBackendQueue', {
     //   visibilityTimeout: cdk.Duration.seconds(300)
     // });
+
+    // 👇 create DynamoDB 'Products' table
+    const productsTable = new dynamodb.Table(this, 'Products', {
+      tableName: 'Products',
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      // readCapacity: 5,
+      // writeCapacity: 5,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      partitionKey: {
+        name: 'id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'title',
+        type: dynamodb.AttributeType.STRING,
+      },
+    });
+
+    // 👇 create DynamoDB 'Stocks' table
+    const stocksTable = new dynamodb.Table(this, 'Stocks', {
+      tableName: 'Stocks',
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      // readCapacity: 5,
+      // writeCapacity: 5,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      partitionKey: {
+        name: 'product_id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'count',
+        type: dynamodb.AttributeType.NUMBER,
+      },
+    });
 
     const api = new apigateway.RestApi(this, 'BackendShopAPI', {
       description: 'Aws NodeJs Backend Shop API',
@@ -48,13 +83,20 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
       this,
       'GetProductsListLambda',
       {
-        runtime: lambda.Runtime.NODEJS_18_X,
+        runtime: lambda.Runtime.NODEJS_16_X,
         handler: 'index.handler',
         code: lambda.Code.fromAsset(
           path.join(__dirname, '../handlers/get-products-list')
         ),
+        environment: {
+          DYNAMODB_PRODUCTS_TABLE_NAME: productsTable.tableName,
+          DYNAMODB_STOCKS_TABLE_NAME: stocksTable.tableName,
+        },
       }
     );
+
+    productsTable.grantReadData(getProductsListLambda);
+    stocksTable.grantReadData(getProductsListLambda);
 
     // 👇 add a /products resource
     const products = api.root.addResource('products');
@@ -70,13 +112,20 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
       this,
       'GetProductByIdLambda',
       {
-        runtime: lambda.Runtime.NODEJS_18_X,
+        runtime: lambda.Runtime.NODEJS_16_X,
         handler: 'index.handler',
         code: lambda.Code.fromAsset(
           path.join(__dirname, '../handlers/get-product-by-id')
         ),
+        environment: {
+          DYNAMODB_PRODUCTS_TABLE_NAME: productsTable.tableName,
+          DYNAMODB_STOCKS_TABLE_NAME: stocksTable.tableName,
+        },
       }
     );
+
+    productsTable.grantReadData(getProductByIdLambda);
+    stocksTable.grantReadData(getProductByIdLambda);
 
     // 👇 add a /products/{productId} resource
     const product = products.addResource('{productId}');
@@ -85,6 +134,56 @@ export class NodejsAwsShopBackendStack extends cdk.Stack {
     product.addMethod(
       'GET',
       new apigateway.LambdaIntegration(getProductByIdLambda)
+    );
+
+    // 👇 define create product function
+    const createProductLambda = new lambda.Function(
+      this,
+      'CreateProductLambda',
+      {
+        runtime: lambda.Runtime.NODEJS_16_X,
+        handler: 'index.handler',
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, '../handlers/create-product')
+        ),
+        environment: {
+          DYNAMODB_PRODUCTS_TABLE_NAME: productsTable.tableName,
+          DYNAMODB_STOCKS_TABLE_NAME: stocksTable.tableName,
+        },
+      }
+    );
+
+    productsTable.grantWriteData(createProductLambda);
+    stocksTable.grantWriteData(createProductLambda);
+
+    // 👇 define the request body schema
+    const requestBodySchema = new apigateway.Model(this, 'RequestBodySchema', {
+      restApi: api,
+      contentType: 'application/json',
+      schema: {
+        type: apigateway.JsonSchemaType.OBJECT,
+        properties: {
+          title: { type: apigateway.JsonSchemaType.STRING },
+          description: { type: apigateway.JsonSchemaType.STRING },
+          price: { type: apigateway.JsonSchemaType.NUMBER },
+          count: { type: apigateway.JsonSchemaType.NUMBER },
+        },
+        required: ['title', 'description', 'price'],
+      },
+    });
+
+    // 👇 integrate POST /products with createProductLambda
+    products.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(createProductLambda),
+      {
+        requestModels: {
+          'application/json': requestBodySchema,
+        },
+        requestValidatorOptions: {
+          validateRequestBody: true,
+        },
+      }
     );
   }
 }

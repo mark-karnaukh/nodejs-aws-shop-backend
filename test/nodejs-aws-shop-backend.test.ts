@@ -34,7 +34,7 @@ describe('Aws resource construction:', () => {
   test('should create lambda functions', () => {
     template.hasResourceProperties('AWS::Lambda::Function', {
       Handler: 'index.handler',
-      Runtime: 'nodejs18.x',
+      Runtime: 'nodejs16.x',
     });
 
     // template.resourceCountIs('AWS::Lambda::Function', 2);
