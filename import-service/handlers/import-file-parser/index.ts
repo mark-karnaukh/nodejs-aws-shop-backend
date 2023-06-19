@@ -25,6 +25,7 @@ export async function handler(event: S3Event, context: Context): Promise<any> {
     };
 
     const s3Stream = s3Client.getObject(params).createReadStream();
+    const fileName = filePath.split('/').at(1);
 
     console.log('Start reading a file: ', filePath);
 
@@ -38,7 +39,24 @@ export async function handler(event: S3Event, context: Context): Promise<any> {
 
           return resolve(true);
         });
-    });
+    })
+      .then(() => {
+        return s3Client
+          .copyObject({
+            Bucket: bucketName,
+            CopySource: `${bucketName}/${filePath}`,
+            Key: `parsed/${fileName}`,
+          })
+          .promise();
+      })
+      .then(() => {
+        return s3Client
+          .deleteObject({
+            Bucket: bucketName,
+            Key: filePath,
+          })
+          .promise();
+      });
   } catch (error) {
     const { message } = error as AWSError;
 

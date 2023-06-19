@@ -3,6 +3,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import * as path from 'path';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
@@ -92,7 +93,19 @@ export class ImportServiceStack extends cdk.Stack {
       })
     );
 
-    // 👇 define import products file function
+    // 👇 define IAM policy for import file parser function
+    const importFileParserPolicy = new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        's3:PutObject',
+        's3:GetObject',
+        's3:DeleteObject',
+        's3:ListBucket',
+      ],
+      resources: [bucket.bucketArn, `${bucket.bucketArn}/*`],
+    });
+
+    // 👇 define import file parser function
     const importFileParserLambda = new lambda.Function(
       this,
       'ImportFileParserLambda',
@@ -109,7 +122,8 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
 
-    bucket.grantRead(importFileParserLambda);
+    importFileParserLambda.addToRolePolicy(importFileParserPolicy);
+    // bucket.grantRead(importFileParserLambda);
 
     // 👇 assign notifications to be sent to the Lambda function
     bucket.addEventNotification(
