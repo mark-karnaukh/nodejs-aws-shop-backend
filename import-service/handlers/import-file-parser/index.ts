@@ -29,18 +29,15 @@ export async function handler(event: S3Event, context: Context): Promise<any> {
     console.log('Start reading a file: ', filePath);
 
     return await new Promise((resolve, reject) => {
-      const results: unknown[] = [];
-
       s3Stream
         .pipe(csv())
-        .on('data', (data) => results.push(data) && console.log(data))
+        .on('data', (data) => console.log(data))
         .on('error', reject)
-        .on('end', () =>
-          console.log(
-            `File ${filePath} was parsed successfully: `,
-            JSON.stringify(results, undefined, 2) && resolve(results)
-          )
-        );
+        .on('end', () => {
+          console.log(`File ${filePath} was parsed successfully.`);
+
+          return resolve(true);
+        });
     });
   } catch (error) {
     const { message } = error as AWSError;

@@ -20,7 +20,7 @@ export async function handler(
   const s3BucketRootFolder = process.env.S3_BUCKET_ROOT_FOLDER || '';
 
   const headers = {
-    'Content-Type': 'application/json',
+    'Content-Type': 'text/plain; charset=UTF-8',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'OPTIONS,GET',
