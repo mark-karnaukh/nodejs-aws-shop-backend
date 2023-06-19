@@ -12,7 +12,7 @@ export async function handler(
   context: Context
 ): Promise<APIGatewayProxyResult> {
   // Logs for debugging
-  console.log('Incoming request:', JSON.stringify(event, undefined, 2));
+  console.log('Incoming request: ', JSON.stringify(event, undefined, 2));
 
   const fileName = event.queryStringParameters?.name || '';
 
