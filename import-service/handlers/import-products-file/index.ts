@@ -26,6 +26,14 @@ export async function handler(
     'Access-Control-Allow-Methods': 'OPTIONS,GET',
   };
 
+  if (!fileName) {
+    return {
+      statusCode: 400,
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'File name should be provided!' }),
+    };
+  }
+
   try {
     const params = {
       Bucket: s3BucketName,
