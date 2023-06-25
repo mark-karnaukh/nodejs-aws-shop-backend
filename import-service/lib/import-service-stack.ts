@@ -128,7 +128,8 @@ export class ImportServiceStack extends cdk.Stack {
     // 👇 assign notifications to be sent to the Lambda function
     bucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
-      new s3n.LambdaDestination(importFileParserLambda)
+      new s3n.LambdaDestination(importFileParserLambda),
+      { prefix: 'uploaded/' }
     );
   }
 }
