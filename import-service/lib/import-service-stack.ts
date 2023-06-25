@@ -3,10 +3,10 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import * as path from 'path';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -40,6 +40,12 @@ export class ImportServiceStack extends cdk.Stack {
       ],
     });
 
+    const queue = sqs.Queue.fromQueueArn(
+      this,
+      'CatalogItemsQueue',
+      'arn:aws:sqs:eu-central-1:357194777734:catalog-items-queue'
+    );
+
     const api = new apigateway.RestApi(this, 'ImportServiceAPI', {
       description: 'Import Service REST API',
       deployOptions: {
@@ -69,6 +75,7 @@ export class ImportServiceStack extends cdk.Stack {
       'ImportProductsFileLambda',
       {
         runtime: lambda.Runtime.NODEJS_16_X,
+        // functionName: 'importProductsFile',
         handler: 'index.handler',
         code: lambda.Code.fromAsset(
           path.join(__dirname, '../handlers/import-products-file/')
@@ -111,6 +118,7 @@ export class ImportServiceStack extends cdk.Stack {
       'ImportFileParserLambda',
       {
         runtime: lambda.Runtime.NODEJS_16_X,
+        // functionName: 'importFileParser',
         handler: 'index.handler',
         code: lambda.Code.fromAsset(
           path.join(__dirname, '../handlers/import-file-parser/')
@@ -118,11 +126,13 @@ export class ImportServiceStack extends cdk.Stack {
         environment: {
           S3_BUCKET_NAME: bucket.bucketName,
           S3_BUCKET_ROOT_FOLDER: 'uploaded',
+          IMPORT_SQS_URL: queue.queueUrl,
         },
       }
     );
 
     importFileParserLambda.addToRolePolicy(importFileParserPolicy);
+    queue.grantSendMessages(importFileParserLambda);
     // bucket.grantRead(importFileParserLambda);
 
     // 👇 assign notifications to be sent to the Lambda function

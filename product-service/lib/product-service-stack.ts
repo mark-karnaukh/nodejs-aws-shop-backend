@@ -2,10 +2,15 @@ import * as cdk from 'aws-cdk-lib';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 import { SwaggerUi } from '@pepperize/cdk-apigateway-swagger-ui';
 import * as path from 'path';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as dotenv from 'dotenv';
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+
+dotenv.config();
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -52,6 +57,22 @@ export class ProductServiceStack extends cdk.Stack {
       },
     });
 
+    // 👇 create queue
+    const catalogItemsQueue = new sqs.Queue(this, 'CatalogItemsQueue', {
+      queueName: 'catalog-items-queue',
+    });
+
+    // 👇 create sns topic
+    const createProductTopic = new sns.Topic(this, 'CreateProductTopic', {
+      topicName: 'create-product-topic',
+    });
+
+    new sns.Subscription(this, 'StockSubscription', {
+      endpoint: process.env.STOCK_EMAIL as string,
+      protocol: sns.SubscriptionProtocol.EMAIL,
+      topic: createProductTopic,
+    });
+
     const api = new apigateway.RestApi(this, 'ProductServiceAPI', {
       description: 'Product Service REST API',
       deployOptions: {
@@ -84,6 +105,7 @@ export class ProductServiceStack extends cdk.Stack {
       'GetProductsListLambda',
       {
         runtime: lambda.Runtime.NODEJS_16_X,
+        // functionName: 'getProductsList',
         handler: 'index.handler',
         code: lambda.Code.fromAsset(
           path.join(__dirname, '../handlers/get-products-list')
@@ -113,6 +135,7 @@ export class ProductServiceStack extends cdk.Stack {
       'GetProductByIdLambda',
       {
         runtime: lambda.Runtime.NODEJS_16_X,
+        // functionName: 'getProductById',
         handler: 'index.handler',
         code: lambda.Code.fromAsset(
           path.join(__dirname, '../handlers/get-product-by-id')
@@ -142,6 +165,7 @@ export class ProductServiceStack extends cdk.Stack {
       'CreateProductLambda',
       {
         runtime: lambda.Runtime.NODEJS_16_X,
+        // functionName: 'createProduct',
         handler: 'index.handler',
         code: lambda.Code.fromAsset(
           path.join(__dirname, '../handlers/create-product')
@@ -185,5 +209,32 @@ export class ProductServiceStack extends cdk.Stack {
         },
       }
     );
+
+    // 👇 define catalog batch process function
+    const catalogBatchProcessLambda = new lambda.Function(
+      this,
+      'CatalogBatchProcessLambda',
+      {
+        runtime: lambda.Runtime.NODEJS_16_X,
+        // functionName: 'catalogBatchProcess',
+        handler: 'index.handler',
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, '../handlers/catalog-batch-process')
+        ),
+        environment: {
+          DYNAMODB_PRODUCTS_TABLE_NAME: productsTable.tableName,
+          DYNAMODB_STOCKS_TABLE_NAME: stocksTable.tableName,
+          CREATE_PRODUCT_TOPIC_ARN: createProductTopic.topicArn,
+        },
+      }
+    );
+
+    createProductTopic.grantPublish(catalogBatchProcessLambda);
+    catalogBatchProcessLambda.addEventSource(
+      new SqsEventSource(catalogItemsQueue, { batchSize: 5 })
+    );
+
+    productsTable.grantWriteData(catalogBatchProcessLambda);
+    stocksTable.grantWriteData(catalogBatchProcessLambda);
   }
 }
