@@ -71,6 +71,11 @@ export class ProductServiceStack extends cdk.Stack {
       endpoint: process.env.BIG_STOCK_EMAIL as string,
       protocol: sns.SubscriptionProtocol.EMAIL,
       topic: createProductTopic,
+      filterPolicy: {
+        count: sns.SubscriptionFilter.numericFilter({
+          greaterThan: 50,
+        }),
+      },
     });
 
     new sns.Subscription(this, 'RegularStockSubscription', {
