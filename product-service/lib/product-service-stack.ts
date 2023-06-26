@@ -67,10 +67,21 @@ export class ProductServiceStack extends cdk.Stack {
       topicName: 'create-product-topic',
     });
 
-    new sns.Subscription(this, 'StockSubscription', {
-      endpoint: process.env.STOCK_EMAIL as string,
+    new sns.Subscription(this, 'BigStockSubscription', {
+      endpoint: process.env.BIG_STOCK_EMAIL as string,
       protocol: sns.SubscriptionProtocol.EMAIL,
       topic: createProductTopic,
+    });
+
+    new sns.Subscription(this, 'RegularStockSubscription', {
+      endpoint: process.env.REGULAR_STOCK_EMAIL as string,
+      protocol: sns.SubscriptionProtocol.EMAIL,
+      topic: createProductTopic,
+      filterPolicy: {
+        count: sns.SubscriptionFilter.numericFilter({
+          lessThanOrEqualTo: 50,
+        }),
+      },
     });
 
     const api = new apigateway.RestApi(this, 'ProductServiceAPI', {
