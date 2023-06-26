@@ -35,7 +35,7 @@ export async function handler(event: S3Event, context: Context): Promise<any> {
     return await new Promise((resolve, reject) => {
       s3Stream
         .pipe(csv())
-        .on('data', async (data) => {
+        .on('data', (data) => {
           // Debugging logs
           // console.log('Parsed product item: ', JSON.stringify(data, null, 2));
 
@@ -44,19 +44,7 @@ export async function handler(event: S3Event, context: Context): Promise<any> {
             QueueUrl: queueUrl,
           };
 
-          return await sqs
-            .sendMessage(params)
-            .promise()
-            .finally(() => {
-              console.log(
-                // Debugging logs
-                `Product Item: ${JSON.stringify(
-                  data,
-                  null,
-                  2
-                )} was sent to SQS queue: ${queueUrl}`
-              );
-            });
+          return sqs.sendMessage(params).promise();
         })
         .on('error', reject)
         .on('end', () => {

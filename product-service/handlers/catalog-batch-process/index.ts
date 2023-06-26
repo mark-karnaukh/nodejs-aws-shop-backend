@@ -77,18 +77,6 @@ export async function handler(
           };
 
           return snsClient.publish(params, context.done).promise();
-        })
-        .finally(() => {
-          // Debugging logs
-          console.log(
-            `Product Item: ${JSON.stringify(
-              newProduct,
-              null,
-              2
-            )} was sent to SNS topic: ${createProductTopicArn}`
-          );
-
-          return Promise.resolve();
         });
     })
   ).catch((error: AWSError) => {
