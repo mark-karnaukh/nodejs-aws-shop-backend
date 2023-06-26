@@ -27,14 +27,13 @@ export async function handler(
 
   const records = event.Records || [];
 
-  for (const record of records) {
-    try {
+  await Promise.all(
+    records.map((record) => {
       const productData: ProductItem = JSON.parse(record.body);
 
       console.log('New Product Data: ', record.body);
 
-      // productData.id || crypto.randomUUID();
-      const id = crypto.randomUUID();
+      const id = productData.id || crypto.randomUUID();
 
       const newProduct = {
         id,
@@ -43,7 +42,7 @@ export async function handler(
         price: +productData?.price,
       };
 
-      await dynamoDb
+      return dynamoDb
         .transactWrite({
           TransactItems: [
             {
@@ -82,17 +81,19 @@ export async function handler(
         .finally(() => {
           // Debugging logs
           console.log(
-            `Data: ${JSON.stringify(
+            `Product Item: ${JSON.stringify(
               newProduct,
               null,
               2
-            )} to SNS topic: ${createProductTopicArn}`
+            )} was sent to SNS topic: ${createProductTopicArn}`
           );
-        });
-    } catch (error) {
-      const { message } = error as AWSError;
 
-      console.log('Error: ', message);
-    }
-  }
+          return Promise.resolve();
+        });
+    })
+  ).catch((error: AWSError) => {
+    const { message } = error;
+
+    console.log('Error: ', message);
+  });
 }

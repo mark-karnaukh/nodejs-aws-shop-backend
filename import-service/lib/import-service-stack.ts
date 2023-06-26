@@ -128,6 +128,7 @@ export class ImportServiceStack extends cdk.Stack {
           S3_BUCKET_ROOT_FOLDER: 'uploaded',
           IMPORT_SQS_URL: queue.queueUrl,
         },
+        memorySize: 256,
       }
     );
 

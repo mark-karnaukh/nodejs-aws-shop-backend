@@ -226,12 +226,17 @@ export class ProductServiceStack extends cdk.Stack {
           DYNAMODB_STOCKS_TABLE_NAME: stocksTable.tableName,
           CREATE_PRODUCT_TOPIC_ARN: createProductTopic.topicArn,
         },
+        memorySize: 256,
+        timeout: cdk.Duration.seconds(5),
       }
     );
 
     createProductTopic.grantPublish(catalogBatchProcessLambda);
     catalogBatchProcessLambda.addEventSource(
-      new SqsEventSource(catalogItemsQueue, { batchSize: 5 })
+      new SqsEventSource(catalogItemsQueue, {
+        batchSize: 5,
+        // maxBatchingWindow: cdk.Duration.seconds(5),
+      })
     );
 
     productsTable.grantWriteData(catalogBatchProcessLambda);
