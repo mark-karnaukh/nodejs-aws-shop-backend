@@ -3,7 +3,7 @@ import { AWSError, S3, SQS } from 'aws-sdk';
 import * as csv from 'csv-parser';
 
 const s3Client = new S3();
-const sqs = new SQS();
+const sqsClient = new SQS();
 
 export async function handler(event: S3Event, context: Context): Promise<any> {
   // Logs for debugging
@@ -44,7 +44,7 @@ export async function handler(event: S3Event, context: Context): Promise<any> {
             QueueUrl: queueUrl,
           };
 
-          return sqs.sendMessage(params).promise();
+          return sqsClient.sendMessage(params).promise();
         })
         .on('error', reject)
         .on('end', () => {

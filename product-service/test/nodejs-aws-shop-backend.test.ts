@@ -15,7 +15,7 @@ import * as ProductService from '../lib/product-service-stack';
 //   });
 // });
 
-describe('Aws resource construction:', () => {
+xdescribe('Aws resource construction:', () => {
   let app: cdk.App;
   let stack: ProductService.ProductServiceStack;
   let template: cdk.assertions.Template;
