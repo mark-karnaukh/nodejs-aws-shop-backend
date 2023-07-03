@@ -129,6 +129,23 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
 
+    //  👇 apply CORS headers for 401 and 403 auth responses
+    api.addGatewayResponse('UnauthorizedAuthResponse', {
+      type: apigateway.ResponseType.UNAUTHORIZED,
+      // statusCode: '401',
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+      },
+    });
+
+    api.addGatewayResponse('AccessDeniedAuthResponse', {
+      type: apigateway.ResponseType.ACCESS_DENIED,
+      // statusCode: '403',
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+      },
+    });
+
     // 👇 add a /import resource
     const products = api.root.addResource('import');
 
