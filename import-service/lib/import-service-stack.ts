@@ -4,20 +4,24 @@ import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
-import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import {
+  Effect,
+  PolicyDocument,
+  PolicyStatement,
+  Role,
+  ServicePrincipal,
+} from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'ImportServiceQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
 
     const bucket = new s3.Bucket(this, 'ImportServiceBucket', {
       // versioned: false,
@@ -43,7 +47,7 @@ export class ImportServiceStack extends cdk.Stack {
     const queue = sqs.Queue.fromQueueArn(
       this,
       'CatalogItemsQueue',
-      'arn:aws:sqs:eu-central-1:357194777734:catalog-items-queue'
+      process.env.CATALOG_ITEMS_QUEUE_ARN as string
     );
 
     const api = new apigateway.RestApi(this, 'ImportServiceAPI', {
@@ -89,6 +93,42 @@ export class ImportServiceStack extends cdk.Stack {
 
     bucket.grantReadWrite(importProductsFileLambda);
 
+    // 👇 get existing basic authorizer function from resource arn
+    const basicAuthorizerLambda = lambda.Function.fromFunctionArn(
+      this,
+      'BasicAuthorizerLambda',
+      process.env.AUTHORIZER_FUNCTION_ARN as string
+    );
+
+    // 👇 create custom basic authorizer IAM role
+    const authorizationRole = new Role(this, 'BasicAuthorizationRole', {
+      roleName: 'LambdaAuthorizerRole',
+      assumedBy: new ServicePrincipal('apigateway.amazonaws.com'),
+      inlinePolicies: {
+        allowLambdaInvocation: PolicyDocument.fromJson({
+          Version: '2012-10-17',
+          Statement: [
+            {
+              Effect: 'Allow',
+              Action: ['lambda:InvokeFunction', 'lambda:InvokeAsync'],
+              Resource: basicAuthorizerLambda.functionArn,
+            },
+          ],
+        }),
+      },
+    });
+
+    // 👇 create custom basic authorizer
+    const authorizer = new apigateway.TokenAuthorizer(
+      this,
+      'CustomBasicAuthAuthorizer',
+      {
+        handler: basicAuthorizerLambda,
+        identitySource: 'method.request.header.Authorization',
+        assumeRole: authorizationRole,
+      }
+    );
+
     // 👇 add a /import resource
     const products = api.root.addResource('import');
 
@@ -97,7 +137,8 @@ export class ImportServiceStack extends cdk.Stack {
       'GET',
       new apigateway.LambdaIntegration(importProductsFileLambda, {
         proxy: true,
-      })
+      }),
+      { authorizer }
     );
 
     // 👇 define IAM policy for import file parser function
