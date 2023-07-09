@@ -18,11 +18,6 @@ export class ProductServiceStack extends cdk.Stack {
 
     // The code that defines your stack goes here
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'ProductServiceStack', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
-
     // 👇 create DynamoDB 'Products' table
     const productsTable = new dynamodb.Table(this, 'Products', {
       tableName: 'Products',

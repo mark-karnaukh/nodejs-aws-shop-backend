@@ -1,8 +1,8 @@
 {
-  "name": "import-service",
+  "name": "authorization-service",
   "version": "0.1.0",
   "bin": {
-    "import-service": "bin/import-service.js"
+    "authorization-service": "bin/authorization-service.js"
   },
   "scripts": {
     "build": "tsc",
@@ -12,7 +12,6 @@
     "diff": "cdk diff",
     "bootstrap": "cdk bootstrap",
     "deploy": "cdk deploy",
-    "deploy:outputs": "cdk deploy --outputs-file ./cdk-outputs.json",
     "destroy": "cdk destroy",
     "cloud:infra:setup": "npm run destroy && npm run build && npm run deploy"
   },
@@ -28,7 +27,6 @@
   },
   "dependencies": {
     "aws-cdk-lib": "2.81.0",
-    "aws-sdk": "^2.1399.0",
     "constructs": "^10.0.0",
     "dotenv": "^16.3.1",
     "source-map-support": "^0.5.21"
