@@ -1,8 +1,11 @@
 const express = require('express');
 const proxy = require('http-proxy-middleware');
+const cors = require('cors');
 
 const app = express();
 const port = 3000;
+
+app.use(cors());
 
 app.use(
   '/product-api',
