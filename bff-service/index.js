@@ -3,6 +3,9 @@ import { CART_API_SERVICE_KEY, PRODUCT_API_SERVICE_KEY } from './constants.js';
 import express from 'express';
 import proxy from 'http-proxy-middleware';
 import cors from 'cors';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 const port = 3000;
@@ -12,7 +15,7 @@ app.use(cors());
 app.use(
   `/${PRODUCT_API_SERVICE_KEY}`,
   proxy.createProxyMiddleware({
-    target: 'https://wfvhgvxizg.execute-api.eu-central-1.amazonaws.com/dev',
+    target: process.env[PRODUCT_API_SERVICE_KEY],
     changeOrigin: true,
     pathRewrite: {
       [`^/${PRODUCT_API_SERVICE_KEY}`]: '',
@@ -23,8 +26,7 @@ app.use(
 app.use(
   `/${CART_API_SERVICE_KEY}`,
   proxy.createProxyMiddleware({
-    target:
-      'http://mark-karnaukh-cart-api-dev.eu-central-1.elasticbeanstalk.com/api',
+    target: process.env[CART_API_SERVICE_KEY],
     changeOrigin: true,
     pathRewrite: {
       [`^/${CART_API_SERVICE_KEY}`]: '',
@@ -37,5 +39,5 @@ app.all('/*', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`BFF service app listening on port ${port}`);
 });
