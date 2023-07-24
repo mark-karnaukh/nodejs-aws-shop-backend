@@ -35,7 +35,7 @@ app.use(
 );
 
 app.all('/*', (req, res) => {
-  res.send('Hello World!');
+  res.status(502).send('Cannot process request');
 });
 
 app.listen(port, () => {
